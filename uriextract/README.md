@@ -1,4 +1,4 @@
-#URIExtract
+# URIExtract
 A set of plugins to perform:
 - uri extraction of the message content
 - blacklist lookups of found uris
