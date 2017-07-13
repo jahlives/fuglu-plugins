@@ -104,6 +104,9 @@ Tags:
 
         for i in range(0, self.config.getint(self.section, 'retries')):
             try:
+                headerscannername = '-' + self.config.get(self.section, 'headerscannername')
+                if headerscannername == '-':
+                    headerscannername = ''
                 if self.config.getboolean(self.section, 'networkmode'):
                     viruses = self.scan_stream(content)
                 else:
@@ -116,15 +119,25 @@ Tags:
                     suspect.debug('Viruses found in message : %s' % viruses)
                 else:
                     suspect.tags['virus']['F-Prot'] = False
+                    addheaderclean = self.config.get(self.section, 'addheaderclean')
+                    if addheaderclean == '1':
+                        suspect.add_header('X-Virus' + headerscannername + '-Status', 'Clean', immediate=True)
+                    elif addheaderclean != '0':
+                        suspect.add_header('X-Virus' + headerscannername + '-Status', addheaderclean, immediate=True)
 
                 if viruses != None:
                     virusaction = self.config.get(self.section, 'virusaction')
                     actioncode = string_to_actioncode(virusaction, self.config)
+		    addheaderinfected = self.config.get(self.section, 'addheaderinfected')
                     firstinfected, firstvirusname = list(viruses.items())[0]
                     values = dict(
                         infectedfile=firstinfected, virusname=firstvirusname)
                     message = apply_template(
                         self.config.get(self.section, 'rejectmessage'), suspect, values)
+                    if addheaderinfected == '1':
+                        suspect.add_header('X-Virus' + headerscannername + '-Status', 'Infected (' + firstvirusname + ')', immediate=True)
+                    elif addheaderinfected != '0':
+                        suspect.add_header('X-Virus' + headerscannername + '-Status', addheaderinfected, immediate=True)
                     return actioncode, message
                 else:
                     return DUNNO

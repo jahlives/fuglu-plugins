@@ -34,7 +34,7 @@ class URIExtract(ScannerPlugin):
                 'description':'Maximum size of processed mails. Larger mail will be skipped.',
             },
             'loguris':{
-                'default':'no',
+                'default':'yes',
                 'description':'print extracted uris in fuglu log',
             },
         }
@@ -160,27 +160,35 @@ class DomainAction(ScannerPlugin):
     def __init__(self,config,section=None):
         ScannerPlugin.__init__(self,config,section)
         self.logger=logging.getLogger('fuglu.plugin.DomainAction')
-    
-        self.requiredvars={       
-            'blacklistconfig':{
-                'default':'/etc/fuglu/rbl.conf',
-                'description':'RBL Lookup config file',
+
+        self.requiredvars = {
+            'blacklistconfig': {
+                'default': '/etc/fuglu/rbl.conf',
+                'description': 'RBL Lookup config file',
             },
-            'checksubdomains':{
-                'default':'yes',
-                'description':'check subdomains as well (from top to bottom, eg. example.com, bla.example.com, blubb.bla.example.com',
+            'checksubdomains': {
+                'default': 'yes',
+                'description': 'check subdomains as well (from top to bottom, eg. example.com, bla.example.com, blubb.bla.example.com',
             },
-            'action':{
-                'default':'reject',
-                'description':'action on hit (reject, delete, etc)',
+            'action': {
+                'default': 'DUNNO',
+                'description': 'action on hit (reject, delete, etc)',
             },
-            'message':{
-                'default':'5.7.1 black listed URL ${domain} by ${blacklist}',
-                'description':'message template for rejects/ok messages',
+            'message': {
+                'default': '5.7.1 black listed URL ${domain} by ${blacklist}',
+                'description': 'message template for rejects/ok messages',
             },
-            'maxdomains':{
-                'default':'10',
-                'description':'maximum number of domains to check per message',
+            'maxdomains': {
+                'default': '10',
+                'description': 'maximum number of domains to check per message',
+            },
+            'endfirsthit': {
+                'default': '1',
+                'description': 'end processing on first hit on blacklist',
+            },
+            'pluginfollows': {
+                'default': '0',
+                'description': 'set to 1 if a following plugin does return the action code for postfix. In this case this plugin returns DUNNO on any case',
             },
         }
         
@@ -200,6 +208,7 @@ class DomainAction(ScannerPlugin):
         domains=set(map(domainmagic.extractor.domain_from_uri,urls))
         
         counter=0
+        hosts=[]
         for domain in domains:
             counter+=1
             if counter>self.config.getint(self.section,'maxdomains'):
@@ -216,12 +225,19 @@ class DomainAction(ScannerPlugin):
             
             for subindex in subrange:
                 subdomain='.'.join(parts[-subindex:])
-
                 listings=self.rbllookup.listings(subdomain)
                 for identifier,humanreadable in listings.iteritems():
                     self.logger.info("%s : url host %s flagged as %s because %s"%(suspect.id,domain,identifier,humanreadable))
-                    return string_to_actioncode(self.config.get(self.section,'action'), self.config),apply_template(self.config.get(self.section,'message'), suspect, dict(domain=domain,blacklist=identifier))
-    
+                    hosts.append(subdomain)
+                    if self.config.get(self.section, 'endfirsthit') == 1 and self.config_get(self.section,'pluginfollows') == 1:
+                        suspect.add_tag('black.uris', subdomain)
+                        return DUNNO
+                    elif self.config.get(self.section, 'endfirsthit') == 1 and self.config_get(self.section,'pluginfollows') == 0:
+                        return string_to_actioncode(self.config.get(self.section, 'action'),self.config), apply_template(self.config.get(self.section, 'message'), suspect,dict(domain=domain, blacklist=identifier))
+            if len(hosts) > 0 and self.config.get(self.section, 'pluginfollows') == 1:
+                suspect.add_tag('black.uris', hosts)
+            elif len(hosts) > 0 and self.config.get(self.section, 'pluginfollows') == 0:
+                return string_to_actioncode(self.config.get(self.section, 'action'), self.config), apply_template(self.config.get(self.section, 'message'), suspect, dict(domain=domain, blacklist=identifier))
         return DUNNO
     
     
@@ -290,3 +306,4 @@ class URIExtractTest(unittest.TestCase):
         self.assertTrue('http://roasty.familyhealingassist.ru?coil&commission' in uris,'did not find uri, result was %s'%uris)
         
 # TEST : postcat-eml.sh testdata/03E49500578 | plugdummy.py -p ~/workspace/fuglu-plugins-cm/extractors/ -e - uriextract.URIExtract uriextract.DomainAction 
+
