@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from fuglu.shared import ScannerPlugin, DUNNO
+from fuglu.shared import ScannerPlugin, DUNNO,string_to_actioncode,apply_template
 
 
 class URIExtractAddHeader(ScannerPlugin):
@@ -30,16 +30,16 @@ class URIExtractAddHeader(ScannerPlugin):
 
     def examine(self, suspect):
         urls = suspect.get_tag('black.uris', defaultvalue=[])
-        add_links = self.config.get(self.section, 'addheaderlinks')
-        add_count = self.config.get(self.section, 'addheadercount')
+        add_links = self.config.getboolean(self.section, 'addheaderlinks')
+        add_count = self.config.getboolean(self.section, 'addheadercount')
         if len(urls) == 0:
             return DUNNO
-        elif add_count == 1 and add_links == 0:
+        elif add_count == '1' and add_links == '0':
             suspect.add_header('X-Black-Host-Count', str(len(urls)), immediate=True)
-        elif add_count == 1 and add_links == 1:
+        elif add_count == '1' and add_links == '1':
             suspect.add_header('X-Black-Host', "\t" + "\r\n\t\t\t  ".join(urls), immediate=True)
             suspect.add_header('X-Black-Host-Count', str(len(urls)), immediate=True)
-        elif add_count == 0 and add_links == 1:
+        elif add_count == '0' and add_links == '1':
             suspect.add_header('X-Black-Host', "\t" + "\r\n\t\t\t  ".join(urls), immediate=True)
         return string_to_actioncode(self.config.get('URIExtractPlugin', 'action'), self.config), apply_template(
             self.config.get('URIExtractPlugin', 'message'), suspect, dict(domain=urls[0], blacklist='tbd'))
