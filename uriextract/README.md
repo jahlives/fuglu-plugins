@@ -19,8 +19,8 @@ to fully enable the two plugins. To enable adding headers set the config section
 
 ```
 [URIExtractAddHeader]
-add_header_links=1
-add_header_count=1
+addheaderlinks=1
+addheadercount=1
 ```
 
 the first option enables a header that lists the uris of all blacklisted hosts and the 2nd adds a header with a count of how many uris in the message matches the blacklist.
