@@ -184,7 +184,7 @@ class DomainAction(ScannerPlugin):
                 'description': 'end processing on first hit on blacklist',
             },
             'pluginfollows': {
-                'default': 1,
+                'default': 0,
                 'description': 'set to 1 if a following plugin does return the action code for postfix. In this case this plugin returns DUNNO on any case',
             },
         }
