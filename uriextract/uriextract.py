@@ -180,11 +180,11 @@ class DomainAction(ScannerPlugin):
                 'description': 'maximum number of domains to check per message',
             },
             'endfirsthit': {
-                'default': '0',
+                'default': 0,
                 'description': 'end processing on first hit on blacklist',
             },
             'pluginfollows': {
-                'default': '1',
+                'default': 1,
                 'description': 'set to 1 if a following plugin does return the action code for postfix. In this case this plugin returns DUNNO on any case',
             },
         }
@@ -226,14 +226,14 @@ class DomainAction(ScannerPlugin):
                     self.logger.info(
                         "%s : url host %s flagged as %s because %s" % (suspect.id, domain, identifier, humanreadable))
                     hosts.append(subdomain)
-                    if self.config.getboolean(self.section, 'endfirsthit') == '1' and self.config.getboolean(self.section, 'pluginfollows') == '1':
+                    if self.config.getboolean(self.section, 'endfirsthit') == True and self.config.getboolean(self.section, 'pluginfollows') == True:
                         suspect.set_tag('black.uris', subdomain)
                         return DUNNO
-                    elif self.config.getboolean(self.section, 'endfirsthit') == '1' and self.config.getboolean(self.section, 'pluginfollows') == '0':
+                    elif self.config.getboolean(self.section, 'endfirsthit') == True and self.config.getboolean(self.section, 'pluginfollows') == False:
                         return string_to_actioncode(self.config.get(self.section, 'action'), self.config), apply_template(self.config.get(self.section, 'message'), suspect, dict(domain=domain, blacklist=identifier))
-            if len(hosts) > 0 and self.config.getboolean(self.section, 'pluginfollows') == '1':
+            if len(hosts) > 0 and self.config.getboolean(self.section, 'pluginfollows') == True:
                 suspect.set_tag('black.uris', hosts)
-            elif len(hosts) > 0 and self.config.getboolean(self.section, 'pluginfollows') == '0':
+            elif len(hosts) > 0 and self.config.getboolean(self.section, 'pluginfollows') == False:
                 return string_to_actioncode(self.config.get(self.section, 'action'), self.config), apply_template(
                     self.config.get(self.section, 'message'), suspect, dict(domain=domain, blacklist=identifier))
         return DUNNO

@@ -11,11 +11,11 @@ class URIExtractAddHeader(ScannerPlugin):
 
         self.requiredvars = {
             'addheaderlinks': {
-                'default': '0',
+                'default': 0,
                 'description': 'Add header with blacklisted uris',
             },
             'addheadercount': {
-                'default': '0',
+                'default': 0,
                 'description': 'Add header with count of blacklisted uris',
             },
             'action': {
@@ -34,12 +34,12 @@ class URIExtractAddHeader(ScannerPlugin):
         add_count = self.config.getboolean(self.section, 'addheadercount')
         if len(urls) == 0:
             return DUNNO
-        elif add_count == '1' and add_links == '0':
+        elif add_count == True and add_links == False:
             suspect.add_header('X-Black-Host-Count', str(len(urls)), immediate=True)
-        elif add_count == '1' and add_links == '1':
+        elif add_count == True and add_links == True:
             suspect.add_header('X-Black-Host', "\t" + "\r\n\t\t\t  ".join(urls), immediate=True)
             suspect.add_header('X-Black-Host-Count', str(len(urls)), immediate=True)
-        elif add_count == '0' and add_links == '1':
+        elif add_count == False and add_links == True:
             suspect.add_header('X-Black-Host', "\t" + "\r\n\t\t\t  ".join(urls), immediate=True)
         return string_to_actioncode(self.config.get('URIExtractPlugin', 'action'), self.config), apply_template(
             self.config.get('URIExtractPlugin', 'message'), suspect, dict(domain=urls[0], blacklist='tbd'))
