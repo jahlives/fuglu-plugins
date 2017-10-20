@@ -59,15 +59,15 @@ class AttachmentAddHeader(ScannerPlugin):
 
     def examine(self, suspect):
         urls = suspect.get_tag('block.file', defaultvalue=[])
-        add_links = self.config.getboolean(self.section, 'blockedaddheader')
+        add_links = self.config.get('FiletypePlugin', 'blockedaddheader')
         if len(urls) == 0 or add_links == '0':
             return DUNNO
         elif add_links == '1':
-            suspect.add_header('X-Fuglu-Block', str(urls['ascirep']), immediate=True)
+            suspect.add_header('X-Fuglu-Blocked', str(urls['ascii']), immediate=True)
         elif add_links == '2':
-            suspect.add_header('X-Fuglu-Block', str(urls['content']), immediate=True)
+            suspect.add_header('X-Fuglu-Blocked', str(urls['info']), immediate=True)
         else:
-            suspect.add_header('X-Fuglu-Block', str(add_links), immediate=True)
+            suspect.add_header('X-Fuglu-Blocked', str(add_links), immediate=True)
         return DUNNO
 #        return string_to_actioncode(self.config.get('URIExtractPlugin', 'action'), self.config), apply_template(
 #            self.config.get('URIExtractPlugin', 'message'), suspect, dict(domain=urls[0], blacklist='tbd'))

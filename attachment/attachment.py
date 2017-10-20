@@ -540,7 +540,7 @@ The other common template variables are available as well.
                     self.logger.info('suspect %s contains blocked attachment %s %s' % (
                         suspect.id, displayname, asciirep))
                     blockinfo = ("%s %s: %s" % (displayname, asciirep, description)).strip()
-                    suspect.set_tag('block.file', dict(blockinfo, asciirep, description))
+                    suspect.set_tag('block.file', {'info' : blockinfo, 'ascii' : asciirep, 'desc' : description})
                     suspect.tags['FiletypePlugin.errormessage'] = blockinfo
                     if self.config.getboolean(self.section, 'sendbounce'):
                         if suspect.is_spam() or suspect.is_virus():
@@ -935,3 +935,4 @@ The other common template variables are available as well.
             print("No database configured. Using per user/domain file configuration from %s" %
                   self.config.get(self.section, 'rulesdir'))
         return True
+
