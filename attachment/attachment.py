@@ -540,6 +540,7 @@ The other common template variables are available as well.
                     self.logger.info('suspect %s contains blocked attachment %s %s' % (
                         suspect.id, displayname, asciirep))
                     blockinfo = ("%s %s: %s" % (displayname, asciirep, description)).strip()
+                    suspect.set_tag('block.file', dict(blockinfo, asciirep, description))
                     suspect.tags['FiletypePlugin.errormessage'] = blockinfo
                     if self.config.getboolean(self.section, 'sendbounce'):
                         if suspect.is_spam() or suspect.is_virus():
@@ -551,19 +552,7 @@ The other common template variables are available as well.
                             bounce = Bounce(self.config)
                             bounce.send_template_file(
                                 suspect.from_address, self.blockedfiletemplate, suspect, dict(blockinfo=blockinfo))
-                    blockedaddheader = self.config.get(self.section, 'blockedaddheader')
-                    if blockedaddheader == '2':
-                        content = ("%s: %s" % (asciirep, description)).strip()
-                        suspect.add_header('X-Fuglu-Blocked', content, immediate=True)
-                        return ATTACHMENT_DUNNO
-                    elif blockedaddheader == '1':
-                        suspect.add_header('X-Fuglu-Blocked', asciirep, immediate=True)
-                        return ATTACHMENT_DUNNO
-                    elif blockedaddheader == '0':
-                        return ATTACHMENT_BLOCK
-                    else:
-                        suspect.add_header('X-Fuglu-Blocked', blockedaddheader, immediate=True)
-                        return ATTACHMENT_DUNNO
+                    return ATTACHMENT_DUNNO
 
                 if action == 'delete':
                     self.logger.info(
