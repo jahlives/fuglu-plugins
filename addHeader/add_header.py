@@ -34,12 +34,12 @@ class URIExtractAddHeader(ScannerPlugin):
         add_count = self.config.getboolean(self.section, 'addheadercount')
         if len(urls) == 0:
             return DUNNO
-        elif add_count == True and add_links == False:
+        elif add_count is True and add_links is False:
             suspect.add_header('X-Black-Host-Count', str(len(urls)), immediate=True)
-        elif add_count == True and add_links == True:
+        elif add_count is True and add_links is True:
             suspect.add_header('X-Black-Host', "\t" + "\r\n\t\t\t  ".join(urls), immediate=True)
             suspect.add_header('X-Black-Host-Count', str(len(urls)), immediate=True)
-        elif add_count == False and add_links == True:
+        elif add_count is False and add_links is True:
             suspect.add_header('X-Black-Host', "\t" + "\r\n\t\t\t  ".join(urls), immediate=True)
         return string_to_actioncode(self.config.get('URIExtractPlugin', 'action'), self.config), apply_template(
             self.config.get('URIExtractPlugin', 'message'), suspect, dict(domain=urls[0], blacklist='tbd'))
