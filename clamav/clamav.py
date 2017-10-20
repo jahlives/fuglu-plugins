@@ -127,11 +127,7 @@ Tags:
                 else:
                     suspect.tags['virus']['ClamAV'] = False
                     addheaderclean = self.config.get(self.section, 'addheaderclean')
-                    if addheaderclean == '1':
-                        suspect.add_header('X-Virus' + headerscannername + '-Status', 'Clean', immediate=True)
-                    elif addheaderclean != '0':
-                        suspect.add_header('X-Virus' + headerscannername + '-Status', addheaderclean, immediate=True)
-
+                    suspect.set_tag('clam.clean', 'Clean')
                 if viruses != None:
                     virusaction = self.config.get(self.section, 'virusaction')
                     actioncode = string_to_actioncode(virusaction, self.config)
@@ -141,10 +137,7 @@ Tags:
                         infectedfile=firstinfected, virusname=firstvirusname)
                     message = apply_template(
                         self.config.get(self.section, 'rejectmessage'), suspect, values)
-                    if addheaderinfected == '1':
-                        suspect.add_header('X-Virus' + headerscannername + '-Status', 'Infected (' + firstvirusname + ')', immediate=True)
-                    elif addheaderinfected != 0:
-                        suspect.add_header('X-Virus' + headerscannername + '-Status', addheaderinfected, immediate=True)
+                    suspect.set_tag('clam.virus', firstvirusname)
                     return actioncode, message
                 return DUNNO
             except Exception as e:
