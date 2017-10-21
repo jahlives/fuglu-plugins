@@ -30,16 +30,16 @@ class URIExtractAddHeader(ScannerPlugin):
 
     def examine(self, suspect):
         urls = suspect.get_tag('black.uris', defaultvalue=[])
-        add_links = self.config.getboolean(self.section, 'addheaderlinks')
-        add_count = self.config.getboolean(self.section, 'addheadercount')
+        add_header_links = self.config.getboolean(self.section, 'addheaderlinks')
+        add_header_count = self.config.getboolean(self.section, 'addheadercount')
         if len(urls) == 0:
             return DUNNO
-        elif add_count is True and add_links is False:
+        elif add_header_count is True and add_header_links is False:
             suspect.add_header('X-Black-Host-Count', str(len(urls)), immediate=True)
-        elif add_count is True and add_links is True:
+        elif add_header_count is True and add_header_links is True:
             suspect.add_header('X-Black-Host', "\t" + "\r\n\t\t\t  ".join(urls), immediate=True)
             suspect.add_header('X-Black-Host-Count', str(len(urls)), immediate=True)
-        elif add_count is False and add_links is True:
+        elif add_header_count is False and add_header_links is True:
             suspect.add_header('X-Black-Host', "\t" + "\r\n\t\t\t  ".join(urls), immediate=True)
         return string_to_actioncode(self.config.get('URIExtractPlugin', 'action'), self.config), apply_template(
             self.config.get('URIExtractPlugin', 'message'), suspect, dict(domain=urls[0], blacklist='tbd'))
@@ -58,16 +58,16 @@ class AttachmentAddHeader(ScannerPlugin):
         }
 
     def examine(self, suspect):
-        urls = suspect.get_tag('block.file', defaultvalue=[])
-        add_links = self.config.get('FiletypePlugin', 'blockedaddheader')
-        if len(urls) == 0 or add_links == '0':
+        filename = suspect.get_tag('block.file', defaultvalue=[])
+        add_header = self.config.get('FiletypePlugin', 'blockedaddheader')
+        if len(filename) == 0 or add_header == '0':
             return DUNNO
-        elif add_links == '1':
-            suspect.add_header('X-Fuglu-Blocked', str(urls['ascii']), immediate=True)
-        elif add_links == '2':
-            suspect.add_header('X-Fuglu-Blocked', str(urls['info']), immediate=True)
+        elif add_header == '1':
+            suspect.add_header('X-Fuglu-Blocked', str(filename['ascii']), immediate=True)
+        elif add_header == '2':
+            suspect.add_header('X-Fuglu-Blocked', str(filename['info']), immediate=True)
         else:
-            suspect.add_header('X-Fuglu-Blocked', str(add_links), immediate=True)
+            suspect.add_header('X-Fuglu-Blocked', str(add_header), immediate=True)
         return DUNNO
 #        return string_to_actioncode(self.config.get('URIExtractPlugin', 'action'), self.config), apply_template(
 #            self.config.get('URIExtractPlugin', 'message'), suspect, dict(domain=urls[0], blacklist='tbd'))
@@ -78,23 +78,25 @@ class ClamAddHeader(ScannerPlugin):
         self.logger = logging.getLogger('fuglu.plugin.DomainAction')
 
         self.requiredvars = {
-             'blockedaddheader': {
+             'addheaderinfected': {
                 'default': '0',
-                'description': 'if set to non zero value a header will be added for blocked files and the message will be accepted\n1:\tonly filename appended as header\n2:\tfilename and details will be added as header\nany other string value will be added as-it-is to header',
+                'description': 'if set to non zero value a header will be added for infected files\n1:\tonly virusname appended as header\n2:\tvirusname and details will be added as header\nany other string value will be added as-it-is to header',
+            },
+            'addheaderclean': {
+                'default': '0',
+                'description': 'add header if message is clean\nany string value will be used as-it-is',
             }
         }
 
     def examine(self, suspect):
-        urls = suspect.get_tag('clam.virus', defaultvalue=[])
-        add_links = self.config.get('ClamavPlugin', 'addheaderinfected')
-        if len(urls) == 0 or add_links == '0':
+        virusname = suspect.get_tag('clam.virus', defaultvalue=[])
+        add_header = self.config.get('ClamavPlugin', 'addheaderinfected')
+        if len(virusname) == 0 or add_header == '0':
             return DUNNO
-        elif add_links == '1':
-            suspect.add_header('X-Fuglu-ClamAV', str(urls), immediate=True)
-        elif add_links == '2':
-            suspect.add_header('X-Fuglu-ClamAV', str(urls), immediate=True)
+        elif add_header == '1' or add_header == '2':
+            suspect.add_header('X-Fuglu-ClamAV', str(virusname), immediate=True)
         else:
-            suspect.add_header('X-Fuglu-ClamAV', str(add_links), immediate=True)
+            suspect.add_header('X-Fuglu-ClamAV', str(add_header), immediate=True)
         return DUNNO
 
 class FprotAddHeader(ScannerPlugin):
@@ -103,23 +105,25 @@ class FprotAddHeader(ScannerPlugin):
         self.logger = logging.getLogger('fuglu.plugin.DomainAction')
 
         self.requiredvars = {
-             'blockedaddheader': {
+            'addheaderinfected': {
                 'default': '0',
-                'description': 'if set to non zero value a header will be added for blocked files and the message will be accepted\n1:\tonly filename appended as header\n2:\tfilename and details will be added as header\nany other string value will be added as-it-is to header',
+                'description': 'if set to non zero value a header will be added for infected files\n1:\tonly virusname appended as header\n2:\tvirusname and details will be added as header\nany other string value will be added as-it-is to header',
+            },
+            'addheaderclean': {
+                'default': '0',
+                'description': 'add header if message is clean\nany string value will be used as-it-is',
             }
         }
 
     def examine(self, suspect):
-        urls = suspect.get_tag('fprot.virus', defaultvalue=[])
-        add_links = self.config.get('FprotPlugin', 'addheaderinfected')
-        if len(urls) == 0 or add_links == '0':
+        virusname = suspect.get_tag('fprot.virus', defaultvalue=[])
+        add_header = self.config.get('FprotPlugin', 'addheaderinfected')
+        if len(virusname) == 0 or add_header == '0':
             return DUNNO
-        elif add_links == '1':
-            suspect.add_header('X-Fuglu-Fprot', str(urls), immediate=True)
-        elif add_links == '2':
-            suspect.add_header('X-Fuglu-Fprot', str(urls), immediate=True)
+        elif add_header == '1' or add_header == '2':
+            suspect.add_header('X-Fuglu-Fprot', str(virusname), immediate=True)
         else:
-            suspect.add_header('X-Fuglu-Fprot', str(add_links), immediate=True)
+            suspect.add_header('X-Fuglu-Fprot', str(add_header), immediate=True)
         return DUNNO
 
 class SsspAddHeader(ScannerPlugin):
@@ -128,21 +132,23 @@ class SsspAddHeader(ScannerPlugin):
         self.logger = logging.getLogger('fuglu.plugin.DomainAction')
 
         self.requiredvars = {
-             'blockedaddheader': {
+            'addheaderinfected': {
                 'default': '0',
-                'description': 'if set to non zero value a header will be added for blocked files and the message will be accepted\n1:\tonly filename appended as header\n2:\tfilename and details will be added as header\nany other string value will be added as-it-is to header',
+                'description': 'if set to non zero value a header will be added for infected files\n1:\tonly virusname appended as header\n2:\tvirusname and details will be added as header\nany other string value will be added as-it-is to header',
+            },
+            'addheaderclean': {
+                'default': '0',
+                'description': 'add header if message is clean\nany string value will be used as-it-is',
             }
         }
 
     def examine(self, suspect):
-        urls = suspect.get_tag('sssp.virus', defaultvalue=[])
-        add_links = self.config.get('SSSPPlugin', 'addheaderinfected')
-        if len(urls) == 0 or add_links == '0':
+        virusname = suspect.get_tag('sssp.virus', defaultvalue=[])
+        add_header = self.config.get('SSSPPlugin', 'addheaderinfected')
+        if len(virusname) == 0 or add_header == '0':
             return DUNNO
-        elif add_links == '1':
-            suspect.add_header('X-Fuglu-Sophos', str(urls), immediate=True)
-        elif add_links == '2':
-            suspect.add_header('X-Fuglu-Sohpos', str(urls), immediate=True)
+        elif add_header == '1' or add_header == '2':
+            suspect.add_header('X-Fuglu-Sophos', str(virusname), immediate=True)
         else:
-            suspect.add_header('X-Fuglu-Sophos', str(add_links), immediate=True)
+            suspect.add_header('X-Fuglu-Sophos', str(add_header), immediate=True)
         return DUNNO
