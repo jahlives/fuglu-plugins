@@ -1,5 +1,6 @@
 # fuglu-plugins
-These plugins are mostly (except for one) based on the stock plugins https://github.com/gryphius/fuglu/tree/master/fuglu/src/fuglu/plugins. The one exception from the above is from extra-plugins https://github.com/gryphius/fuglu-extra-plugins 
+These plugins are based on the stock plugins https://github.com/gryphius/fuglu/tree/master/fuglu/src/fuglu/plugins
+
 Most changes are related to the ability to append headers to messages processed. This is mostly useful for plugins with DUNNO action, so headers are added for following plugins to catch up.
 
 ## TODO
